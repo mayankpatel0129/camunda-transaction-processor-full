@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:camunda;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+camunda:
+  bpm:
+    database:
+      schema-update: create
+    admin-user:
+      id: demo
+      password: demo
+      first-name: Demo
+      last-name: User
+    metrics:
+      enabled: true
+    job-execution:
+      enabled: true
+    webapp:
+      enabled: true
+      index-redirect-enabled: true

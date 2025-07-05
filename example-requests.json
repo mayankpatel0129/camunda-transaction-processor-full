@@ -1,0 +1,111 @@
+{
+  "examples": {
+    "purchase_transaction": {
+      "url": "POST http://localhost:8080/transactions/process",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "transactionType": "Purchase",
+        "amount": 125.50,
+        "currency": "USD",
+        "transactionDateTime": "2025-07-05T14:30:00",
+        "creditCardInfo": {
+          "cardNumber": "4111111111111111",
+          "holderName": "John Smith",
+          "expiryDate": "2026-12-01",
+          "cvv": "123",
+          "cardType": "VISA"
+        },
+        "billingAddress": {
+          "street": "123 Main Street",
+          "city": "New York",
+          "state": "NY",
+          "zipCode": "10001",
+          "country": "USA"
+        },
+        "vendorInfo": {
+          "name": "Amazon Store",
+          "location": "Online",
+          "merchantId": "AMZ123456",
+          "category": "E-commerce"
+        },
+        "description": "Online purchase - Electronics",
+        "referenceNumber": "REF123456789"
+      }
+    },
+    "payment_transaction": {
+      "url": "POST http://localhost:8080/transactions/process",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "transactionType": "Payment",
+        "amount": 500.00,
+        "currency": "USD",
+        "transactionDateTime": "2025-07-05T15:45:00",
+        "creditCardInfo": {
+          "cardNumber": "5555555555554444",
+          "holderName": "Jane Doe",
+          "expiryDate": "2027-08-01",
+          "cvv": "456",
+          "cardType": "MASTERCARD"
+        },
+        "billingAddress": {
+          "street": "456 Oak Avenue",
+          "city": "Los Angeles",
+          "state": "CA",
+          "zipCode": "90210",
+          "country": "USA"
+        },
+        "vendorInfo": {
+          "name": "Utility Company",
+          "location": "Los Angeles, CA",
+          "merchantId": "UTIL789",
+          "category": "Utilities"
+        },
+        "description": "Monthly electricity bill payment",
+        "referenceNumber": "UTIL987654321"
+      }
+    },
+    "adjustment_transaction": {
+      "url": "POST http://localhost:8080/transactions/process",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "transactionType": "Adjustment",
+        "amount": -25.00,
+        "currency": "USD",
+        "transactionDateTime": "2025-07-05T16:00:00",
+        "creditCardInfo": {
+          "cardNumber": "378282246310005",
+          "holderName": "Michael Johnson",
+          "expiryDate": "2025-10-01",
+          "cvv": "789",
+          "cardType": "AMEX"
+        },
+        "billingAddress": {
+          "street": "789 Pine Street",
+          "city": "Chicago",
+          "state": "IL",
+          "zipCode": "60601",
+          "country": "USA"
+        },
+        "vendorInfo": {
+          "name": "Restaurant ABC",
+          "location": "Chicago, IL",
+          "merchantId": "REST456",
+          "category": "Food & Dining"
+        },
+        "description": "Refund for cancelled order",
+        "referenceNumber": "ADJ555666777"
+      }
+    }
+  },
+  "curl_examples": {
+    "purchase": "curl -X POST http://localhost:8080/transactions/process -H \"Content-Type: application/json\" -d '{\"transactionType\":\"Purchase\",\"amount\":125.50,\"currency\":\"USD\",\"transactionDateTime\":\"2025-07-05T14:30:00\",\"creditCardInfo\":{\"cardNumber\":\"4111111111111111\",\"holderName\":\"John Smith\",\"expiryDate\":\"2026-12-01\",\"cvv\":\"123\",\"cardType\":\"VISA\"},\"billingAddress\":{\"street\":\"123 Main Street\",\"city\":\"New York\",\"state\":\"NY\",\"zipCode\":\"10001\",\"country\":\"USA\"},\"vendorInfo\":{\"name\":\"Amazon Store\",\"location\":\"Online\",\"merchantId\":\"AMZ123456\",\"category\":\"E-commerce\"},\"description\":\"Online purchase - Electronics\",\"referenceNumber\":\"REF123456789\"}'",
+    "payment": "curl -X POST http://localhost:8080/transactions/process -H \"Content-Type: application/json\" -d '{\"transactionType\":\"Payment\",\"amount\":500.00,\"currency\":\"USD\",\"transactionDateTime\":\"2025-07-05T15:45:00\",\"creditCardInfo\":{\"cardNumber\":\"5555555555554444\",\"holderName\":\"Jane Doe\",\"expiryDate\":\"2027-08-01\",\"cvv\":\"456\",\"cardType\":\"MASTERCARD\"},\"billingAddress\":{\"street\":\"456 Oak Avenue\",\"city\":\"Los Angeles\",\"state\":\"CA\",\"zipCode\":\"90210\",\"country\":\"USA\"},\"vendorInfo\":{\"name\":\"Utility Company\",\"location\":\"Los Angeles, CA\",\"merchantId\":\"UTIL789\",\"category\":\"Utilities\"},\"description\":\"Monthly electricity bill payment\",\"referenceNumber\":\"UTIL987654321\"}'",
+    "adjustment": "curl -X POST http://localhost:8080/transactions/process -H \"Content-Type: application/json\" -d '{\"transactionType\":\"Adjustment\",\"amount\":-25.00,\"currency\":\"USD\",\"transactionDateTime\":\"2025-07-05T16:00:00\",\"creditCardInfo\":{\"cardNumber\":\"378282246310005\",\"holderName\":\"Michael Johnson\",\"expiryDate\":\"2025-10-01\",\"cvv\":\"789\",\"cardType\":\"AMEX\"},\"billingAddress\":{\"street\":\"789 Pine Street\",\"city\":\"Chicago\",\"state\":\"IL\",\"zipCode\":\"60601\",\"country\":\"USA\"},\"vendorInfo\":{\"name\":\"Restaurant ABC\",\"location\":\"Chicago, IL\",\"merchantId\":\"REST456\",\"category\":\"Food & Dining\"},\"description\":\"Refund for cancelled order\",\"referenceNumber\":\"ADJ555666777\"}'"
+  }
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="Definitions_TransactionRules" name="DetermineTransactionPath" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="DeterminePath" name="Determine Transaction Path">
+    <decisionTable id="DecisionTable_1">
+      <input id="Input_TransactionType">
+        <inputExpression id="InputExpression_TransactionType" typeRef="string">
+          <text>transactionType</text>
+        </inputExpression>
+      </input>
+      <output id="Output_TaskFlow" name="taskFlow" typeRef="string" />
+
+      <rule id="Rule_1">
+        <inputEntry id="InputEntry_1">
+          <text>"Purchase"</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_1">
+          <text>"authorize,settle"</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_2">
+        <inputEntry id="InputEntry_2">
+          <text>"Payment"</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_2">
+          <text>"validate,post"</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_3">
+        <inputEntry id="InputEntry_3">
+          <text>"Adjustment"</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_3">
+          <text>"review,apply"</text>
+        </outputEntry>
+      </rule>
+
+    </decisionTable>
+  </decision>
+</definitions>

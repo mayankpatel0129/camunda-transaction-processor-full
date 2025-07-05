@@ -1,0 +1,33 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE
+.vscode/
+.idea/
+*.iml
+workspace.code-workspace
+
+# Logs
+*.log
+app.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+*.pid
+spring.log
+
+# H2 Database
+*.db
+*.trace.db
+*.lock.db
+
+# Temporary files
+*.tmp
+*.temp

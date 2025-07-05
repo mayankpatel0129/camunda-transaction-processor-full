@@ -1,0 +1,398 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-5678-9012-123456789012",
+		"name": "Camunda Transaction Processor",
+		"description": "Collection for testing credit card transaction processing with comprehensive transaction data including credit card info, billing address, vendor details, and transaction metadata.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Purchase Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});",
+							"",
+							"pm.test(\"Response contains processInstanceId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.processInstanceId).to.exist;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Purchase\",\n  \"amount\": 125.50,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T14:30:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"John Smith\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Amazon Store\",\n    \"location\": \"Online\",\n    \"merchantId\": \"AMZ123456\",\n    \"category\": \"E-commerce\"\n  },\n  \"description\": \"Online purchase - Electronics\",\n  \"referenceNumber\": \"REF123456789\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Process a purchase transaction with full credit card information including card details, billing address, and vendor information. This will trigger the authorize → settle workflow."
+			},
+			"response": []
+		},
+		{
+			"name": "Payment Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});",
+							"",
+							"pm.test(\"Transaction type is Payment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.transactionType).to.eql(\"Payment\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T15:45:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"5555555555554444\",\n    \"holderName\": \"Jane Doe\",\n    \"expiryDate\": \"2027-08-01\",\n    \"cvv\": \"456\",\n    \"cardType\": \"MASTERCARD\"\n  },\n  \"billingAddress\": {\n    \"street\": \"456 Oak Avenue\",\n    \"city\": \"Los Angeles\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Utility Company\",\n    \"location\": \"Los Angeles, CA\",\n    \"merchantId\": \"UTIL789\",\n    \"category\": \"Utilities\"\n  },\n  \"description\": \"Monthly electricity bill payment\",\n  \"referenceNumber\": \"UTIL987654321\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Process a payment transaction for utility bill. This will trigger the validate → post workflow with comprehensive payment validation including cardholder verification and billing address validation."
+			},
+			"response": []
+		},
+		{
+			"name": "Adjustment Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});",
+							"",
+							"pm.test(\"Transaction type is Adjustment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.transactionType).to.eql(\"Adjustment\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Adjustment\",\n  \"amount\": -25.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T16:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"378282246310005\",\n    \"holderName\": \"Michael Johnson\",\n    \"expiryDate\": \"2025-10-01\",\n    \"cvv\": \"789\",\n    \"cardType\": \"AMEX\"\n  },\n  \"billingAddress\": {\n    \"street\": \"789 Pine Street\",\n    \"city\": \"Chicago\",\n    \"state\": \"IL\",\n    \"zipCode\": \"60601\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Restaurant ABC\",\n    \"location\": \"Chicago, IL\",\n    \"merchantId\": \"REST456\",\n    \"category\": \"Food & Dining\"\n  },\n  \"description\": \"Refund for cancelled order\",\n  \"referenceNumber\": \"ADJ555666777\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Process an adjustment transaction (refund). This will trigger the review → apply workflow with adjustment review logic that checks amount thresholds and description requirements."
+			},
+			"response": []
+		},
+		{
+			"name": "High-Value Purchase (Demo Denial)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"error\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Purchase\",\n  \"amount\": 10000.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T17:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"High Value Customer\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"999 Luxury Lane\",\n    \"city\": \"Beverly Hills\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Luxury Store\",\n    \"location\": \"Beverly Hills, CA\",\n    \"merchantId\": \"LUX999\",\n    \"category\": \"Luxury Goods\"\n  },\n  \"description\": \"High-value luxury purchase\",\n  \"referenceNumber\": \"LUX10000001\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Test high-value transaction that should be denied by the authorization logic (amount contains '10000'). This demonstrates the fraud prevention logic in the authorization delegate."
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid Payment (Missing Cardholder)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"error\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"amount\": 100.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T18:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"5555555555554444\",\n    \"holderName\": \"\",\n    \"expiryDate\": \"2027-08-01\",\n    \"cvv\": \"456\",\n    \"cardType\": \"MASTERCARD\"\n  },\n  \"billingAddress\": {\n    \"street\": \"456 Test Street\",\n    \"city\": \"Test City\",\n    \"state\": \"TX\",\n    \"zipCode\": \"12345\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Test Vendor\",\n    \"location\": \"Test Location\",\n    \"merchantId\": \"TEST123\",\n    \"category\": \"Testing\"\n  },\n  \"description\": \"Payment with invalid cardholder name\",\n  \"referenceNumber\": \"INVALID001\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Test payment validation with empty cardholder name. This should fail validation in the PaymentValidationDelegate and throw an error."
+			},
+			"response": []
+		},
+		{
+			"name": "High-Value Adjustment (Manual Review)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Adjustment\",\n  \"amount\": -5000.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-05T19:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"378282246310005\",\n    \"holderName\": \"Large Refund Customer\",\n    \"expiryDate\": \"2025-10-01\",\n    \"cvv\": \"789\",\n    \"cardType\": \"AMEX\"\n  },\n  \"billingAddress\": {\n    \"street\": \"888 Refund Road\",\n    \"city\": \"Refund City\",\n    \"state\": \"FL\",\n    \"zipCode\": \"33101\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Big Purchase Store\",\n    \"location\": \"Miami, FL\",\n    \"merchantId\": \"BIG5000\",\n    \"category\": \"Department Store\"\n  },\n  \"description\": \"Large refund for returned merchandise\",\n  \"referenceNumber\": \"BIGREF5000\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/process",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"process"
+					]
+				},
+				"description": "Test high-value adjustment that should be marked for manual review (amount contains '5000'). The process should complete but with a PENDING_MANUAL_REVIEW status."
+			},
+			"response": []
+		},
+		{
+			"name": "Legacy Simple Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains transaction type\", function () {",
+							"    var responseText = pm.response.text();",
+							"    pm.expect(responseText).to.include(\"Purchase\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "transactionType",
+							"value": "Purchase",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/start?transactionType=Purchase",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"start"
+					],
+					"query": [
+						{
+							"key": "transactionType",
+							"value": "Purchase"
+						}
+					]
+				},
+				"description": "Legacy endpoint for backward compatibility. Simple transaction start with just transaction type parameter."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL variable",
+					"pm.globals.set(\"baseUrl\", \"http://localhost:8080\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test to log response for debugging",
+					"console.log(\"Response Status:\", pm.response.status);",
+					"console.log(\"Response Body:\", pm.response.text());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

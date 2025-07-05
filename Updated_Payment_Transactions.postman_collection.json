@@ -1,0 +1,339 @@
+{
+	"info": {
+		"_postman_id": "87654321-4321-8765-4321-876543218765",
+		"name": "Updated Payment Transactions - Account Based",
+		"description": "Collection for testing account-based payment processing with customer account information, payment methods, and bank details for credit card payments.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Monthly Credit Card Payment - ACH",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});",
+							"",
+							"pm.test(\"Payment process started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include(\"Payment process started\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 350.00,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-15\",\n  \"scheduledDateTime\": \"2025-07-15T09:00:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"4532123456789012\",\n    \"customerName\": \"Sarah Johnson\",\n    \"customerEmail\": \"sarah.johnson@email.com\",\n    \"customerPhone\": \"+1-555-123-4567\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 2450.75,\n    \"creditLimit\": 5000.00,\n    \"minimumPaymentDue\": 125.00,\n    \"paymentDueDate\": \"2025-07-20\",\n    \"lastPaymentDate\": \"2025-06-15\",\n    \"accountStatus\": \"ACTIVE\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"ACH\",\n    \"paymentMethodId\": \"PM001\",\n    \"nickname\": \"Main Checking\",\n    \"isDefault\": true,\n    \"bankDetails\": {\n      \"bankName\": \"Chase Bank\",\n      \"routingNumber\": \"021000021\",\n      \"accountNumber\": \"1234567890\",\n      \"accountHolderName\": \"Sarah Johnson\",\n      \"accountType\": \"CHECKING\",\n      \"bankAddress\": {\n        \"street\": \"1234 Bank Street\",\n        \"city\": \"New York\",\n        \"state\": \"NY\",\n        \"zipCode\": \"10001\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"CUSTOM_AMOUNT\",\n  \"isRecurring\": true,\n  \"recurringFrequency\": \"MONTHLY\",\n  \"paymentReference\": \"PAY202507001\",\n  \"memo\": \"Monthly credit card payment\",\n  \"confirmationEmail\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Process a monthly credit card payment using ACH bank transfer from customer's checking account to pay down credit card balance."
+			},
+			"response": []
+		},
+		{
+			"name": "Minimum Payment - Bank Transfer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Payment type is MINIMUM_PAYMENT\", function () {",
+							"    var requestData = JSON.parse(pm.request.body.raw);",
+							"    pm.expect(requestData.paymentType).to.eql(\"MINIMUM_PAYMENT\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 85.00,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-10\",\n  \"scheduledDateTime\": \"2025-07-10T08:30:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"5555444433332222\",\n    \"customerName\": \"Michael Chen\",\n    \"customerEmail\": \"michael.chen@email.com\",\n    \"customerPhone\": \"+1-555-987-6543\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 1875.50,\n    \"creditLimit\": 3000.00,\n    \"minimumPaymentDue\": 85.00,\n    \"paymentDueDate\": \"2025-07-15\",\n    \"lastPaymentDate\": \"2025-06-10\",\n    \"accountStatus\": \"ACTIVE\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"BANK_TRANSFER\",\n    \"paymentMethodId\": \"PM002\",\n    \"nickname\": \"Savings Account\",\n    \"isDefault\": false,\n    \"bankDetails\": {\n      \"bankName\": \"Bank of America\",\n      \"routingNumber\": \"011000138\",\n      \"accountNumber\": \"9876543210\",\n      \"accountHolderName\": \"Michael Chen\",\n      \"accountType\": \"SAVINGS\",\n      \"bankAddress\": {\n        \"street\": \"5678 Banking Ave\",\n        \"city\": \"Los Angeles\",\n        \"state\": \"CA\",\n        \"zipCode\": \"90210\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"MINIMUM_PAYMENT\",\n  \"isRecurring\": false,\n  \"recurringFrequency\": null,\n  \"paymentReference\": \"PAY202507002\",\n  \"memo\": \"Minimum payment due\",\n  \"confirmationEmail\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Process minimum payment due on credit card account using bank transfer from savings account."
+			},
+			"response": []
+		},
+		{
+			"name": "Full Balance Payment - Online Banking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Payment type is FULL_BALANCE\", function () {",
+							"    var requestData = JSON.parse(pm.request.body.raw);",
+							"    pm.expect(requestData.paymentType).to.eql(\"FULL_BALANCE\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 1245.89,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-08\",\n  \"scheduledDateTime\": \"2025-07-08T14:15:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"3782822463100005\",\n    \"customerName\": \"Emily Rodriguez\",\n    \"customerEmail\": \"emily.rodriguez@email.com\",\n    \"customerPhone\": \"+1-555-456-7890\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 1245.89,\n    \"creditLimit\": 4000.00,\n    \"minimumPaymentDue\": 62.30,\n    \"paymentDueDate\": \"2025-07-25\",\n    \"lastPaymentDate\": \"2025-06-08\",\n    \"accountStatus\": \"ACTIVE\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"ONLINE_BANKING\",\n    \"paymentMethodId\": \"PM003\",\n    \"nickname\": \"Business Checking\",\n    \"isDefault\": true,\n    \"bankDetails\": {\n      \"bankName\": \"Wells Fargo\",\n      \"routingNumber\": \"121000248\",\n      \"accountNumber\": \"5555666677\",\n      \"accountHolderName\": \"Emily Rodriguez\",\n      \"accountType\": \"CHECKING\",\n      \"bankAddress\": {\n        \"street\": \"9999 Financial Blvd\",\n        \"city\": \"Phoenix\",\n        \"state\": \"AZ\",\n        \"zipCode\": \"85001\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"FULL_BALANCE\",\n  \"isRecurring\": false,\n  \"recurringFrequency\": null,\n  \"paymentReference\": \"PAY202507003\",\n  \"memo\": \"Pay off full balance\",\n  \"confirmationEmail\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Process full balance payment to pay off entire credit card balance using online banking transfer."
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid Payment - Inactive Account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"error\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 100.00,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-12\",\n  \"scheduledDateTime\": \"2025-07-12T10:00:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"1111222233334444\",\n    \"customerName\": \"Suspended User\",\n    \"customerEmail\": \"suspended@email.com\",\n    \"customerPhone\": \"+1-555-111-2222\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 500.00,\n    \"creditLimit\": 1000.00,\n    \"minimumPaymentDue\": 25.00,\n    \"paymentDueDate\": \"2025-07-30\",\n    \"lastPaymentDate\": \"2025-05-12\",\n    \"accountStatus\": \"SUSPENDED\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"ACH\",\n    \"paymentMethodId\": \"PM004\",\n    \"nickname\": \"Test Checking\",\n    \"isDefault\": true,\n    \"bankDetails\": {\n      \"bankName\": \"Test Bank\",\n      \"routingNumber\": \"123456789\",\n      \"accountNumber\": \"1111111111\",\n      \"accountHolderName\": \"Suspended User\",\n      \"accountType\": \"CHECKING\",\n      \"bankAddress\": {\n        \"street\": \"123 Test St\",\n        \"city\": \"Test City\",\n        \"state\": \"TX\",\n        \"zipCode\": \"12345\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"CUSTOM_AMOUNT\",\n  \"isRecurring\": false,\n  \"recurringFrequency\": null,\n  \"paymentReference\": \"PAY202507004\",\n  \"memo\": \"Test payment on suspended account\",\n  \"confirmationEmail\": false\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Test payment validation failure due to suspended/inactive account status. Should fail validation."
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid Payment - Bad Routing Number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"error\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 200.00,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-14\",\n  \"scheduledDateTime\": \"2025-07-14T11:30:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"6011123456789012\",\n    \"customerName\": \"Test Customer\",\n    \"customerEmail\": \"test@email.com\",\n    \"customerPhone\": \"+1-555-333-4444\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 800.00,\n    \"creditLimit\": 2000.00,\n    \"minimumPaymentDue\": 40.00,\n    \"paymentDueDate\": \"2025-07-28\",\n    \"lastPaymentDate\": \"2025-06-14\",\n    \"accountStatus\": \"ACTIVE\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"ACH\",\n    \"paymentMethodId\": \"PM005\",\n    \"nickname\": \"Invalid Bank\",\n    \"isDefault\": false,\n    \"bankDetails\": {\n      \"bankName\": \"Invalid Bank\",\n      \"routingNumber\": \"12345\",\n      \"accountNumber\": \"2222333344\",\n      \"accountHolderName\": \"Test Customer\",\n      \"accountType\": \"CHECKING\",\n      \"bankAddress\": {\n        \"street\": \"456 Invalid St\",\n        \"city\": \"Invalid City\",\n        \"state\": \"IN\",\n        \"zipCode\": \"54321\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"CUSTOM_AMOUNT\",\n  \"isRecurring\": false,\n  \"recurringFrequency\": null,\n  \"paymentReference\": \"PAY202507005\",\n  \"memo\": \"Test payment with invalid routing number\",\n  \"confirmationEmail\": false\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Test payment validation failure due to invalid routing number (too short). Should fail validation."
+			},
+			"response": []
+		},
+		{
+			"name": "Below Minimum Payment Warning",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 (Should succeed with warning)\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Payment below minimum should still process\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transactionType\": \"Payment\",\n  \"paymentAmount\": 15.00,\n  \"currency\": \"USD\",\n  \"paymentDate\": \"2025-07-16\",\n  \"scheduledDateTime\": \"2025-07-16T16:45:00\",\n  \"customerAccount\": {\n    \"accountNumber\": \"4000123456789010\",\n    \"customerName\": \"Low Payment Customer\",\n    \"customerEmail\": \"lowpay@email.com\",\n    \"customerPhone\": \"+1-555-777-8888\",\n    \"accountType\": \"CREDIT\",\n    \"currentBalance\": 650.25,\n    \"creditLimit\": 1500.00,\n    \"minimumPaymentDue\": 32.50,\n    \"paymentDueDate\": \"2025-07-22\",\n    \"lastPaymentDate\": \"2025-06-16\",\n    \"accountStatus\": \"ACTIVE\"\n  },\n  \"paymentMethod\": {\n    \"paymentType\": \"ACH\",\n    \"paymentMethodId\": \"PM006\",\n    \"nickname\": \"Emergency Checking\",\n    \"isDefault\": false,\n    \"bankDetails\": {\n      \"bankName\": \"Local Credit Union\",\n      \"routingNumber\": \"314074269\",\n      \"accountNumber\": \"7777888899\",\n      \"accountHolderName\": \"Low Payment Customer\",\n      \"accountType\": \"CHECKING\",\n      \"bankAddress\": {\n        \"street\": \"777 Credit Union Way\",\n        \"city\": \"Denver\",\n        \"state\": \"CO\",\n        \"zipCode\": \"80201\",\n        \"country\": \"USA\"\n      }\n    }\n  },\n  \"paymentType\": \"CUSTOM_AMOUNT\",\n  \"isRecurring\": false,\n  \"recurringFrequency\": null,\n  \"paymentReference\": \"PAY202507006\",\n  \"memo\": \"Partial payment - below minimum\",\n  \"confirmationEmail\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/transactions/payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"transactions",
+						"payment"
+					]
+				},
+				"description": "Test payment amount below minimum payment due. Should generate warning but still process successfully."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL variable for payment endpoints",
+					"pm.globals.set(\"baseUrl\", \"http://localhost:8080\");",
+					"pm.globals.set(\"paymentEndpoint\", \"/transactions/payment\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test to log response for debugging",
+					"console.log(\"Payment Response Status:\", pm.response.status);",
+					"console.log(\"Payment Response Body:\", pm.response.text());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "paymentEndpoint",
+			"value": "/transactions/payment",
+			"type": "string"
+		}
+	]
+}
