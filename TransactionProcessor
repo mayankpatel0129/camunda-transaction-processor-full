@@ -1,0 +1,37 @@
+graph TB
+    A[REST Controller] --> B[Camunda Process Engine]
+    B --> C[DMN Decision Table]
+    C --> D[TaskRouter Delegate]
+    D --> E[Business Delegates]
+    E --> F[Transaction Processing]
+    
+    subgraph "Transaction Types"
+        T1[Purchase Transactions]
+        T2[Account-Based Payments]
+        T3[Adjustment Transactions]
+    end
+    
+    subgraph "Business Delegates"
+        E1[Purchase Authorization]
+        E2[Purchase Settlement]
+        E3[Payment Validation]
+        E4[Payment Posting]
+        E5[Adjustment Review]
+        E6[Adjustment Apply]
+    end
+    
+    subgraph "Data Models"
+        M1[Credit Card Info]
+        M2[Customer Account]
+        M3[Bank Details]
+        M4[Payment Method]
+        M5[Address]
+        M6[Vendor Info]
+    end
+    
+    subgraph "Data Layer"
+        G[H2 Database]
+        H[Process Variables]
+        I[History Data]
+    end
+```
