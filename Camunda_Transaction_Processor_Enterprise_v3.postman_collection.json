@@ -1,0 +1,592 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-5678-9012-123456789012",
+		"name": "Camunda Transaction Processor - Enterprise v3.0.0",
+		"description": "Enterprise-grade collection for testing high-throughput transaction processing with monitoring, resilience, and parallel processing. Includes 5 transaction types (Purchase, Payment, Adjustment, Refund, Chargeback), comprehensive monitoring endpoints, and business rule violation handling.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Purchase Transactions",
+			"description": "Credit card purchase transactions with parallel processing for high-value",
+			"item": [
+				{
+					"name": "Regular Purchase (Sequential)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Response contains processInstanceId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.processInstanceId).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Purchase\",\n  \"amount\": 125.50,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T14:30:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"John Smith\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Amazon Store\",\n    \"location\": \"Online\",\n    \"merchantId\": \"AMZ123456\",\n    \"category\": \"E-commerce\"\n  },\n  \"description\": \"Regular purchase - Electronics\",\n  \"referenceNumber\": \"REF123456789\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Regular purchase transaction under $1000 - uses sequential processing (authorize → settle)"
+					},
+					"response": []
+				},
+				{
+					"name": "High-Value Purchase (Parallel)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"High-value transaction processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.amount).to.be.above(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Purchase\",\n  \"amount\": 2500.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T15:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"5555555555554444\",\n    \"holderName\": \"Sarah Johnson\",\n    \"expiryDate\": \"2027-08-01\",\n    \"cvv\": \"456\",\n    \"cardType\": \"MASTERCARD\"\n  },\n  \"billingAddress\": {\n    \"street\": \"456 Premium Ave\",\n    \"city\": \"Los Angeles\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Premium Electronics\",\n    \"location\": \"Beverly Hills, CA\",\n    \"merchantId\": \"PREM789\",\n    \"category\": \"Electronics\"\n  },\n  \"description\": \"High-value purchase - Laptop\",\n  \"referenceNumber\": \"REF987654321\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "High-value purchase over $1000 - uses parallel processing (authorize → parallel:settle)"
+					},
+					"response": []
+				},
+				{
+					"name": "Fraud Prevention Test (Business Rule Violation)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 (Business Rule Violation)\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response has business_rule_violation status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"business_rule_violation\");",
+									"});",
+									"",
+									"pm.test(\"Contains business code and message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.businessCode).to.exist;",
+									"    pm.expect(jsonData.message).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Purchase\",\n  \"amount\": 15000.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T16:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"High Value Customer\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"999 Luxury Lane\",\n    \"city\": \"Beverly Hills\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Luxury Store\",\n    \"location\": \"Beverly Hills, CA\",\n    \"merchantId\": \"LUX999\",\n    \"category\": \"Luxury Goods\"\n  },\n  \"description\": \"High-value luxury purchase for fraud prevention test\",\n  \"referenceNumber\": \"LUX15000001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Tests fraud prevention system - transactions over $10,000 are denied as business rule violations (not system errors)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Refund Transactions",
+			"description": "Refund processing with validation and business rule handling",
+			"item": [
+				{
+					"name": "Small Refund (Sequential)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Refund amount is negative\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.amount).to.be.below(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Refund\",\n  \"amount\": -125.50,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T17:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"John Smith\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Amazon Store\",\n    \"location\": \"Online\",\n    \"merchantId\": \"AMZ123456\",\n    \"category\": \"E-commerce\"\n  },\n  \"description\": \"Refund for cancelled order\",\n  \"referenceNumber\": \"REF123456789\",\n  \"originalTransactionId\": \"TXN123456789\",\n  \"refundReason\": \"Customer cancelled order within return period\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Small refund under $500 - uses sequential processing (refundValidation → refundProcess)"
+					},
+					"response": []
+				},
+				{
+					"name": "Large Refund (Parallel)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Large refund processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(Math.abs(jsonData.amount)).to.be.above(500);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Refund\",\n  \"amount\": -1250.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T17:30:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"5555555555554444\",\n    \"holderName\": \"Sarah Johnson\",\n    \"expiryDate\": \"2027-08-01\",\n    \"cvv\": \"456\",\n    \"cardType\": \"MASTERCARD\"\n  },\n  \"billingAddress\": {\n    \"street\": \"456 Premium Ave\",\n    \"city\": \"Los Angeles\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Premium Electronics\",\n    \"location\": \"Beverly Hills, CA\",\n    \"merchantId\": \"PREM789\",\n    \"category\": \"Electronics\"\n  },\n  \"description\": \"Large refund for returned laptop\",\n  \"referenceNumber\": \"REF987654321\",\n  \"originalTransactionId\": \"TXN987654321\",\n  \"refundReason\": \"Product defective - full refund requested\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Large refund over $500 - uses parallel processing (refundValidation → parallel:refundProcess)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chargeback Transactions",
+			"description": "Chargeback investigation and dispute processing",
+			"item": [
+				{
+					"name": "Small Chargeback (Sequential)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Chargeback transaction processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.transactionType).to.eql(\"Chargeback\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Chargeback\",\n  \"amount\": 245.75,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T18:00:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"4111111111111111\",\n    \"holderName\": \"Disputed Customer\",\n    \"expiryDate\": \"2026-12-01\",\n    \"cvv\": \"123\",\n    \"cardType\": \"VISA\"\n  },\n  \"billingAddress\": {\n    \"street\": \"789 Dispute St\",\n    \"city\": \"Chicago\",\n    \"state\": \"IL\",\n    \"zipCode\": \"60601\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"Online Retailer\",\n    \"location\": \"Chicago, IL\",\n    \"merchantId\": \"RET456\",\n    \"category\": \"Retail\"\n  },\n  \"description\": \"Chargeback for unrecognized transaction\",\n  \"referenceNumber\": \"CB123456789\",\n  \"chargebackReason\": \"Cardholder does not recognize transaction\",\n  \"chargebackCode\": \"4863\",\n  \"liabilityShift\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Small chargeback under $1000 - uses sequential processing (investigate → dispute)"
+					},
+					"response": []
+				},
+				{
+					"name": "Large Chargeback (Parallel)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Large chargeback processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.amount).to.be.above(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionType\": \"Chargeback\",\n  \"amount\": 3500.00,\n  \"currency\": \"USD\",\n  \"transactionDateTime\": \"2025-07-06T18:30:00\",\n  \"creditCardInfo\": {\n    \"cardNumber\": \"378282246310005\",\n    \"holderName\": \"High Value Dispute\",\n    \"expiryDate\": \"2025-10-01\",\n    \"cvv\": \"789\",\n    \"cardType\": \"AMEX\"\n  },\n  \"billingAddress\": {\n    \"street\": \"999 Chargeback Blvd\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"zipCode\": \"33101\",\n    \"country\": \"USA\"\n  },\n  \"vendorInfo\": {\n    \"name\": \"High-End Electronics\",\n    \"location\": \"Miami, FL\",\n    \"merchantId\": \"ELEC999\",\n    \"category\": \"Electronics\"\n  },\n  \"description\": \"Large chargeback for expensive electronics\",\n  \"referenceNumber\": \"CB987654321\",\n  \"chargebackReason\": \"Goods not provided as described\",\n  \"chargebackCode\": \"4855\",\n  \"liabilityShift\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"process"
+							]
+						},
+						"description": "Large chargeback over $1000 - uses parallel processing (investigate → parallel:dispute)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Monitoring & Health",
+			"description": "Enterprise monitoring and health check endpoints",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Health status available\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Overall application health including circuit breakers and database"
+					},
+					"response": []
+				},
+				{
+					"name": "Circuit Breaker Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Circuit breaker info available\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.details).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health/circuitBreakers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"health",
+								"circuitBreakers"
+							]
+						},
+						"description": "Circuit breaker status for transaction and payment processors"
+					},
+					"response": []
+				},
+				{
+					"name": "Transaction Processing Metrics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Metrics available\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.measurements).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/metrics/transaction.processing.success",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"metrics",
+								"transaction.processing.success"
+							]
+						},
+						"description": "Success counter for transaction processing"
+					},
+					"response": []
+				},
+				{
+					"name": "Thread Pool Metrics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Thread pool metrics available\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.measurements).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/metrics/transaction.thread.pool.active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"metrics",
+								"transaction.thread.pool.active"
+							]
+						},
+						"description": "Active thread count in transaction processing pool"
+					},
+					"response": []
+				},
+				{
+					"name": "All Metrics (Prometheus Format)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/prometheus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"prometheus"
+							]
+						},
+						"description": "All metrics in Prometheus format for monitoring dashboards"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL variable",
+					"pm.globals.set(\"baseUrl\", \"http://localhost:8080\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test to log response for debugging",
+					"console.log(\"Response Status:\", pm.response.status);",
+					"console.log(\"Response Body:\", pm.response.text());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
