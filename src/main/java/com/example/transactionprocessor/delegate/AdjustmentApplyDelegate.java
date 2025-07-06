@@ -1,5 +1,6 @@
 package com.example.transactionprocessor.delegate;
 
+import com.example.transactionprocessor.exception.BusinessRuleException;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ public class AdjustmentApplyDelegate implements JavaDelegate {
         
         if (!"APPROVED".equals(reviewStatus)) {
             System.out.println("Apply FAILED: Review not approved. Status: " + reviewStatus);
-            throw new RuntimeException("Cannot apply adjustment - review not approved");
+            throw new BusinessRuleException("UNAPPROVED_ADJUSTMENT", "Cannot apply adjustment - review not approved");
         }
         
         // Simulate apply logic
