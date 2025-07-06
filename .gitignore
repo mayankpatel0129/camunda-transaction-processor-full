@@ -31,3 +31,7 @@ spring.log
 # Temporary files
 *.tmp
 *.temp
+# SSH Keys
+newkey*
+vscode*
+*.pub
