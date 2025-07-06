@@ -1,12 +1,53 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:camunda;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:camunda;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      pool-name: TransactionProcessorPool
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        jdbc:
+          batch_size: 100
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        hbm2ddl:
+          auto: update
+  task:
+    execution:
+      pool:
+        core-size: 20
+        max-size: 100
+        queue-capacity: 200
+        keep-alive: 60s
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 camunda:
   bpm:
@@ -21,6 +62,120 @@ camunda:
       enabled: true
     job-execution:
       enabled: true
+      core-pool-size: 20
+      max-pool-size: 50
+      queue-capacity: 100
+      keep-alive-time: 60
     webapp:
       enabled: true
       index-redirect-enabled: true
+    generic-properties:
+      properties:
+        job-executor-acquire-by-priority: true
+        job-executor-prefer-timer-jobs: true
+        job-executor-acquire-by-due-date: true
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,httptrace,loggers
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      percentiles:
+        "[http.server.requests]": 0.5,0.9,0.95,0.99
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+
+# Resilience4J Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      transactionProcessor:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 8
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+        ignore-exceptions:
+          - com.example.transactionprocessor.exception.BusinessRuleException
+          - java.lang.IllegalArgumentException
+      paymentProcessor:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      transactionProcessor:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+          - com.example.transactionprocessor.exception.BusinessRuleException
+      paymentProcessor:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.lang.Exception
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+
+# Application Configuration
+app:
+  transaction:
+    thread-pool:
+      core-size: 30
+      max-size: 100
+      queue-capacity: 500
+      keep-alive-seconds: 60
+    batch:
+      size: 100
+      timeout-seconds: 30
+    monitoring:
+      enabled: true
+      alert-failure-threshold: 10
+      alert-interval-minutes: 5
+    notification:
+      enabled: true
+      admin-email: ${ADMIN_EMAIL:admin@example.com}
+      failure-subject: "Transaction Processing Alert"
+      
+# Logging Configuration
+logging:
+  level:
+    com.example.transactionprocessor: INFO
+    org.camunda.bpm.engine: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+  file:
+    name: logs/transaction-processor.log
+    max-size: 100MB
+    max-history: 30

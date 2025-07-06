@@ -1,5 +1,6 @@
 package com.example.transactionprocessor.controller;
 
+import com.example.transactionprocessor.exception.BusinessRuleException;
 import com.example.transactionprocessor.model.TransactionRequest;
 import com.example.transactionprocessor.model.PaymentTransactionRequest;
 import org.camunda.bpm.engine.RuntimeService;
@@ -35,31 +36,63 @@ public class TransactionController {
             variables.put("description", transactionRequest.getDescription());
             variables.put("referenceNumber", transactionRequest.getReferenceNumber());
             
+            // Refund-specific fields
+            if (transactionRequest.getOriginalTransactionId() != null) {
+                variables.put("originalTransactionId", transactionRequest.getOriginalTransactionId());
+            }
+            if (transactionRequest.getRefundReason() != null) {
+                variables.put("refundReason", transactionRequest.getRefundReason());
+            }
+            
+            // Chargeback-specific fields
+            if (transactionRequest.getChargebackReason() != null) {
+                variables.put("chargebackReason", transactionRequest.getChargebackReason());
+            }
+            if (transactionRequest.getChargebackCode() != null) {
+                variables.put("chargebackCode", transactionRequest.getChargebackCode());
+            }
+            if (transactionRequest.getLiabilityShift() != null) {
+                variables.put("liabilityShift", transactionRequest.getLiabilityShift());
+            }
+            
             String processInstanceId = UUID.randomUUID().toString();
             variables.put("processInstanceId", processInstanceId);
 
             System.out.println("Processing transaction: " + transactionRequest);
             
-            runtimeService.startProcessInstanceByKey("transactionProcessing", processInstanceId, variables);
+            try {
+                runtimeService.startProcessInstanceByKey("transactionProcessing", processInstanceId, variables);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Transaction process started successfully");
-            response.put("processInstanceId", processInstanceId);
-            response.put("transactionType", transactionRequest.getTransactionType());
-            response.put("amount", transactionRequest.getAmount());
-            response.put("referenceNumber", transactionRequest.getReferenceNumber());
-            
-            return ResponseEntity.ok(response);
+                Map<String, Object> response = new HashMap<>();
+                response.put("status", "success");
+                response.put("message", "Transaction process started successfully");
+                response.put("processInstanceId", processInstanceId);
+                response.put("transactionType", transactionRequest.getTransactionType());
+                response.put("amount", transactionRequest.getAmount());
+                response.put("referenceNumber", transactionRequest.getReferenceNumber());
+                
+                return ResponseEntity.ok(response);
+            } catch (BusinessRuleException e) {
+                System.err.println("Business rule violation: " + e.getBusinessReason());
+                
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("status", "business_rule_violation");
+                errorResponse.put("businessCode", e.getBusinessCode());
+                errorResponse.put("message", e.getBusinessReason());
+                errorResponse.put("processInstanceId", processInstanceId);
+                errorResponse.put("transactionType", transactionRequest.getTransactionType());
+                
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
         } catch (Exception e) {
-            System.err.println("Error processing transaction: " + e.getMessage());
+            System.err.println("System error processing transaction: " + e.getMessage());
             e.printStackTrace();
             
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", "Error processing transaction: " + e.getMessage());
+            errorResponse.put("status", "system_error");
+            errorResponse.put("message", "System error processing transaction: " + e.getMessage());
             
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 

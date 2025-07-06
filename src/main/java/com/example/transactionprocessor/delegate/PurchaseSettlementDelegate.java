@@ -1,5 +1,6 @@
 package com.example.transactionprocessor.delegate;
 
+import com.example.transactionprocessor.exception.BusinessRuleException;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ public class PurchaseSettlementDelegate implements JavaDelegate {
         
         if (authorized == null || !authorized) {
             System.out.println("Settlement FAILED: Transaction not authorized");
-            throw new RuntimeException("Cannot settle unauthorized transaction");
+            throw new BusinessRuleException("UNAUTHORIZED_SETTLEMENT", "Cannot settle unauthorized transaction");
         }
         
         // Simulate settlement logic
