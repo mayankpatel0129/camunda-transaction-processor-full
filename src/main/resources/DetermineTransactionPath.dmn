@@ -14,127 +14,196 @@
       </input>
       <output id="Output_TaskFlow" name="taskFlow" typeRef="string" />
 
-      <!-- Purchase Transaction Rules -->
+      <!-- Purchase Transaction Rules - Enhanced with more tasks -->
+      <!-- Ultra High-Value Purchases (>= $10,000) - Maximum security and parallel processing -->
       <rule id="Rule_1">
         <inputEntry id="InputEntry_1_1">
           <text>"Purchase"</text>
         </inputEntry>
         <inputEntry id="InputEntry_1_2">
-          <text>&gt;= 1000</text>
+          <text>&gt;= 10000</text>
         </inputEntry>
         <outputEntry id="OutputEntry_1">
-          <text>"authorize,parallel:settle"</text>
+          <text>"fraudCheck,riskAssessment,authorize,parallel:settle,parallel:notification,parallel:compliance"</text>
         </outputEntry>
       </rule>
 
+      <!-- High-Value Purchases ($5,000 - $9,999) - Enhanced security with parallel processing -->
       <rule id="Rule_2">
         <inputEntry id="InputEntry_2_1">
           <text>"Purchase"</text>
         </inputEntry>
         <inputEntry id="InputEntry_2_2">
-          <text>&lt; 1000</text>
+          <text>&gt;= 5000 and &lt; 10000</text>
         </inputEntry>
         <outputEntry id="OutputEntry_2">
+          <text>"fraudCheck,authorize,parallel:settle,parallel:notification"</text>
+        </outputEntry>
+      </rule>
+
+      <!-- Medium-Value Purchases ($1,000 - $4,999) - Standard parallel processing -->
+      <rule id="Rule_3">
+        <inputEntry id="InputEntry_3_1">
+          <text>"Purchase"</text>
+        </inputEntry>
+        <inputEntry id="InputEntry_3_2">
+          <text>&gt;= 1000 and &lt; 5000</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_3">
+          <text>"authorize,parallel:settle,parallel:notification"</text>
+        </outputEntry>
+      </rule>
+
+      <!-- Regular Purchases ($100 - $999) - Sequential processing with validation -->
+      <rule id="Rule_4">
+        <inputEntry id="InputEntry_4_1">
+          <text>"Purchase"</text>
+        </inputEntry>
+        <inputEntry id="InputEntry_4_2">
+          <text>&gt;= 100 and &lt; 1000</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_4">
+          <text>"validate,authorize,settle,notification"</text>
+        </outputEntry>
+      </rule>
+
+      <!-- Small Purchases ($0.01 - $99.99) - Fast track processing -->
+      <rule id="Rule_5">
+        <inputEntry id="InputEntry_5_1">
+          <text>"Purchase"</text>
+        </inputEntry>
+        <inputEntry id="InputEntry_5_2">
+          <text>&gt; 0 and &lt; 100</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_5">
           <text>"authorize,settle"</text>
         </outputEntry>
       </rule>
 
       <!-- Payment Transaction Rules -->
-      <rule id="Rule_3">
-        <inputEntry id="InputEntry_3_1">
+      <rule id="Rule_6">
+        <inputEntry id="InputEntry_6_1">
           <text>"Payment"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_3_2">
+        <inputEntry id="InputEntry_6_2">
           <text>&gt;= 500</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_3">
+        <outputEntry id="OutputEntry_6">
           <text>"validate,parallel:post"</text>
         </outputEntry>
       </rule>
 
-      <rule id="Rule_4">
-        <inputEntry id="InputEntry_4_1">
+      <rule id="Rule_7">
+        <inputEntry id="InputEntry_7_1">
           <text>"Payment"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_4_2">
+        <inputEntry id="InputEntry_7_2">
           <text>&lt; 500</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_4">
+        <outputEntry id="OutputEntry_7">
           <text>"validate,post"</text>
         </outputEntry>
       </rule>
 
-      <!-- Adjustment Transaction Rules -->
-      <rule id="Rule_5">
-        <inputEntry id="InputEntry_5_1">
+      <!-- Adjustment Transaction Rules - Enhanced with more comprehensive processing -->
+      <!-- High-Value Adjustments (>= $5,000) - Require executive approval and audit trail -->
+      <rule id="Rule_8">
+        <inputEntry id="InputEntry_8_1">
           <text>"Adjustment"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_5_2">
-          <text>&lt;= -1000</text>
+        <inputEntry id="InputEntry_8_2">
+          <text>&lt;= -5000</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_5">
-          <text>"review,parallel:apply"</text>
+        <outputEntry id="OutputEntry_8">
+          <text>"review,executiveApproval,auditTrail,parallel:apply,parallel:notification,parallel:compliance"</text>
         </outputEntry>
       </rule>
 
-      <rule id="Rule_6">
-        <inputEntry id="InputEntry_6_1">
+      <!-- Medium-Value Adjustments ($1,000 - $4,999) - Manager approval with parallel processing -->
+      <rule id="Rule_9">
+        <inputEntry id="InputEntry_9_1">
           <text>"Adjustment"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_6_2">
-          <text>&gt; -1000</text>
+        <inputEntry id="InputEntry_9_2">
+          <text>&lt;= -1000 and &gt; -5000</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_6">
-          <text>"review,apply"</text>
+        <outputEntry id="OutputEntry_9">
+          <text>"review,managerApproval,parallel:apply,parallel:notification"</text>
+        </outputEntry>
+      </rule>
+
+      <!-- Regular Adjustments ($100 - $999) - Standard review process -->
+      <rule id="Rule_10">
+        <inputEntry id="InputEntry_10_1">
+          <text>"Adjustment"</text>
+        </inputEntry>
+        <inputEntry id="InputEntry_10_2">
+          <text>&lt;= -100 and &gt; -1000</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_10">
+          <text>"review,supervisorApproval,apply,notification"</text>
+        </outputEntry>
+      </rule>
+
+      <!-- Small Adjustments ($0.01 - $99.99) - Automated processing -->
+      <rule id="Rule_11">
+        <inputEntry id="InputEntry_11_1">
+          <text>"Adjustment"</text>
+        </inputEntry>
+        <inputEntry id="InputEntry_11_2">
+          <text>&gt; -100 and &lt; 0</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_11">
+          <text>"autoReview,apply"</text>
         </outputEntry>
       </rule>
 
       <!-- Refund Transaction Rules -->
-      <rule id="Rule_7">
-        <inputEntry id="InputEntry_7_1">
+      <rule id="Rule_12">
+        <inputEntry id="InputEntry_12_1">
           <text>"Refund"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_7_2">
+        <inputEntry id="InputEntry_12_2">
           <text>&lt;= -500</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_7">
+        <outputEntry id="OutputEntry_12">
           <text>"refundValidation,parallel:refundProcess"</text>
         </outputEntry>
       </rule>
 
-      <rule id="Rule_8">
-        <inputEntry id="InputEntry_8_1">
+      <rule id="Rule_13">
+        <inputEntry id="InputEntry_13_1">
           <text>"Refund"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_8_2">
+        <inputEntry id="InputEntry_13_2">
           <text>&gt; -500</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_8">
+        <outputEntry id="OutputEntry_13">
           <text>"refundValidation,refundProcess"</text>
         </outputEntry>
       </rule>
 
       <!-- Chargeback Transaction Rules -->
-      <rule id="Rule_9">
-        <inputEntry id="InputEntry_9_1">
+      <rule id="Rule_14">
+        <inputEntry id="InputEntry_14_1">
           <text>"Chargeback"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_9_2">
+        <inputEntry id="InputEntry_14_2">
           <text>&gt;= 1000</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_9">
+        <outputEntry id="OutputEntry_14">
           <text>"investigate,parallel:dispute"</text>
         </outputEntry>
       </rule>
 
-      <rule id="Rule_10">
-        <inputEntry id="InputEntry_10_1">
+      <rule id="Rule_15">
+        <inputEntry id="InputEntry_15_1">
           <text>"Chargeback"</text>
         </inputEntry>
-        <inputEntry id="InputEntry_10_2">
+        <inputEntry id="InputEntry_15_2">
           <text>&lt; 1000</text>
         </inputEntry>
-        <outputEntry id="OutputEntry_10">
+        <outputEntry id="OutputEntry_15">
           <text>"investigate,dispute"</text>
         </outputEntry>
       </rule>

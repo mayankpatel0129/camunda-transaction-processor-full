@@ -1,0 +1,345 @@
+# Production Configuration for High-Throughput Transaction Processing
+# Optimized for 1000s TPS with maximum stability and performance
+
+spring:
+  profiles:
+    active: production
+  application:
+    name: transaction-processor-enterprise
+  
+  # Production Database Configuration (replace H2 with PostgreSQL/MySQL in real deployment)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/transaction_processor
+    username: ${DB_USERNAME:tx_processor}
+    password: ${DB_PASSWORD:secure_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 500
+      minimum-idle: 200
+      connection-timeout: 3000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      leak-detection-threshold: 20000
+      pool-name: TransactionProcessorPool
+      connection-test-query: SELECT 1
+      validation-timeout: 2000
+      auto-commit: false
+      connection-init-sql: SET application_name = 'TransactionProcessor'
+      
+  # JPA Configuration for Production
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 1000
+          batch_versioned_data: true
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.ehcache.EhCacheRegionFactory
+        connection:
+          provider_disables_autocommit: true
+        temp:
+          use_jdbc_metadata_defaults: false
+          
+  # Production Task Execution
+  task:
+    execution:
+      pool:
+        core-size: 500
+        max-size: 2000
+        queue-capacity: 10000
+        keep-alive: 60s
+        thread-name-prefix: "tx-prod-"
+        wait-for-tasks-to-complete-on-shutdown: true
+        await-termination-seconds: 60
+        
+  # Mail Configuration for Production Alerts
+  mail:
+    host: ${SMTP_HOST:smtp.company.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: ${SMTP_HOST:smtp.company.com}
+
+# Camunda Production Configuration
+camunda:
+  bpm:
+    database:
+      schema-update: false
+      type: postgres
+    admin-user:
+      id: ${CAMUNDA_ADMIN_USER:admin}
+      password: ${CAMUNDA_ADMIN_PASSWORD:admin123}
+      first-name: Admin
+      last-name: User
+    authorization:
+      enabled: true
+    metrics:
+      enabled: true
+      db-reporter-activate: true
+    job-execution:
+      enabled: true
+      core-pool-size: 200
+      max-pool-size: 1000
+      queue-capacity: 5000
+      keep-alive-time: 60
+      max-jobs-per-acquisition: 50
+      wait-time-in-millis: 500
+      lock-time-in-millis: 300000
+      deployment-aware: true
+    webapp:
+      enabled: true
+      index-redirect-enabled: true
+    filter:
+      create: All tasks
+    generic-properties:
+      properties:
+        job-executor-acquire-by-priority: true
+        job-executor-prefer-timer-jobs: true
+        job-executor-acquire-by-due-date: true
+        enable-expression-evaluation: false
+        enable-historic-instance-permissions: false
+
+# Production Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,configprops,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+      roles: ADMIN,ACTUATOR
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 5s
+        descriptions: true
+      elastic:
+        enabled: ${ELASTICSEARCH_METRICS_ENABLED:false}
+        host: ${ELASTICSEARCH_HOST:localhost:9200}
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+        "[transaction.processing.time]": true
+      percentiles:
+        "[http.server.requests]": 0.5,0.9,0.95,0.99,0.999
+        "[transaction.processing.time]": 0.5,0.9,0.95,0.99,0.999
+      sla:
+        "[http.server.requests]": 10ms,50ms,100ms,200ms,500ms,1s,2s
+        "[transaction.processing.time]": 50ms,100ms,200ms,500ms,1s,2s,5s
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 100MB
+    db:
+      enabled: true
+
+# Enhanced Resilience4J Production Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      transactionProcessor:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 100
+        minimum-number-of-calls: 50
+        failure-rate-threshold: 60
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 2s
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 20
+        automatic-transition-from-open-to-half-open-enabled: true
+        ignore-exceptions:
+          - com.example.transactionprocessor.exception.BusinessRuleException
+          - java.lang.IllegalArgumentException
+          - javax.validation.ValidationException
+      paymentProcessor:
+        register-health-indicator: true
+        sliding-window-type: time_based
+        sliding-window-size: 60
+        minimum-number-of-calls: 20
+        failure-rate-threshold: 70
+        slow-call-rate-threshold: 90
+        slow-call-duration-threshold: 3s
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+      databaseOperations:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 50
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 80
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      transactionProcessor:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
+          - org.springframework.dao.DataAccessResourceFailureException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+          - com.example.transactionprocessor.exception.BusinessRuleException
+          - javax.validation.ValidationException
+      paymentProcessor:
+        max-attempts: 5
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 1.5
+        retry-exceptions:
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+  ratelimiter:
+    instances:
+      transactionAPI:
+        limit-for-period: 5000
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+        register-health-indicator: true
+      paymentAPI:
+        limit-for-period: 2000
+        limit-refresh-period: 1s
+        timeout-duration: 100ms
+        register-health-indicator: true
+
+# Production Application Configuration
+app:
+  transaction:
+    thread-pool:
+      core-size: 1000
+      max-size: 4000
+      queue-capacity: 20000
+      keep-alive-seconds: 60
+    batch:
+      size: 1000
+      timeout-seconds: 5
+    monitoring:
+      enabled: true
+      alert-failure-threshold: 100
+      alert-interval-minutes: 1
+      detailed-metrics: true
+    security:
+      rate-limit-per-minute: 60000
+      max-concurrent-transactions: 50000
+    notification:
+      enabled: true
+      admin-email: ${ADMIN_EMAIL:alerts@company.com}
+      failure-subject: "[CRITICAL] Transaction Processing Alert - Production"
+      
+  performance:
+    max-concurrent-transactions: 50000
+    circuit-breaker-threshold: 5000
+    metrics-update-interval-ms: 1000
+    enable-detailed-metrics: true
+    thread-pool-monitoring-interval-seconds: 10
+
+# Production Logging Configuration
+logging:
+  level:
+    com.example.transactionprocessor: INFO
+    org.camunda.bpm.engine: WARN
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    io.micrometer: WARN
+    io.github.resilience4j: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+  file:
+    name: /var/log/transaction-processor/application.log
+    max-size: 500MB
+    max-history: 30
+    total-size-cap: 10GB
+  logback:
+    rollingpolicy:
+      max-file-size: 500MB
+      max-history: 30
+      total-size-cap: 10GB
+
+# Server Configuration for Production
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /transaction-processor
+  tomcat:
+    threads:
+      max: 2000
+      min-spare: 200
+    max-connections: 10000
+    accept-count: 1000
+    connection-timeout: 5000
+    max-http-post-size: 100MB
+    mbeanregistry:
+      enabled: true
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024
+  http2:
+    enabled: true
+  
+# Security Configuration
+security:
+  require-ssl: ${REQUIRE_SSL:false}
+  content-security-policy: "default-src 'self'; script-src 'self' 'unsafe-inline'"
+  
+# Caching Configuration
+spring.cache:
+  type: ehcache
+  ehcache:
+    config: classpath:ehcache.xml
+
+# Distributed Tracing (if using Zipkin/Jaeger)
+spring.zipkin:
+  enabled: ${ZIPKIN_ENABLED:false}
+  base-url: ${ZIPKIN_URL:http://localhost:9411}
+  service:
+    name: transaction-processor-enterprise
+    
+# Environment-specific overrides
+---
+spring:
+  profiles: docker
+server:
+  port: 8080
+logging:
+  file:
+    name: /app/logs/application.log

@@ -38,22 +38,22 @@ public class TaskRouterDelegate implements JavaDelegate {
     @Autowired
     private MeterRegistry meterRegistry;
     
-    @Value("${app.transaction.thread-pool.core-size:30}")
+    @Value("${app.transaction.thread-pool.core-size:200}")
     private int corePoolSize;
     
-    @Value("${app.transaction.thread-pool.max-size:100}")
+    @Value("${app.transaction.thread-pool.max-size:800}")
     private int maxPoolSize;
     
-    @Value("${app.transaction.thread-pool.queue-capacity:500}")
+    @Value("${app.transaction.thread-pool.queue-capacity:5000}")
     private int queueCapacity;
     
     @Value("${app.transaction.thread-pool.keep-alive-seconds:60}")
     private int keepAliveSeconds;
     
-    @Value("${app.transaction.batch.size:100}")
+    @Value("${app.transaction.batch.size:500}")
     private int batchSize;
     
-    @Value("${app.transaction.batch.timeout-seconds:30}")
+    @Value("${app.transaction.batch.timeout-seconds:10}")
     private int batchTimeoutSeconds;
     
     private ThreadPoolExecutor executorService;
@@ -349,26 +349,54 @@ public class TaskRouterDelegate implements JavaDelegate {
 
     private String mapTaskNameToBean(String taskName) {
         switch (taskName.toLowerCase()) {
+            // Purchase transaction tasks
             case "authorize":
                 return "purchaseAuthorizationDelegate";
             case "settle":
                 return "purchaseSettlementDelegate";
+            case "fraudcheck":
+                return "fraudCheckDelegate";
+            case "riskassessment":
+                return "riskAssessmentDelegate";
+            case "notification":
+                return "notificationDelegate";
+            case "compliance":
+                return "complianceDelegate";
+            
+            // Payment transaction tasks
             case "validate":
                 return "paymentValidationDelegate";
             case "post":
                 return "paymentPostingDelegate";
+            
+            // Adjustment transaction tasks
             case "review":
                 return "adjustmentReviewDelegate";
             case "apply":
                 return "adjustmentApplyDelegate";
+            case "autoreview":
+                return "autoReviewDelegate";
+            case "supervisorapproval":
+                return "supervisorApprovalDelegate";
+            case "managerapproval":
+                return "managerApprovalDelegate";
+            case "executiveapproval":
+                return "executiveApprovalDelegate";
+            case "audittrail":
+                return "auditTrailDelegate";
+            
+            // Refund transaction tasks
             case "refundvalidation":
                 return "refundValidationDelegate";
             case "refundprocess":
                 return "refundProcessDelegate";
+            
+            // Chargeback transaction tasks
             case "investigate":
                 return "chargebackInvestigateDelegate";
             case "dispute":
                 return "chargebackDisputeDelegate";
+            
             default:
                 return taskName + "Delegate";
         }
