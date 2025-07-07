@@ -1,0 +1,222 @@
+version: '3.8'
+
+services:
+  # Transaction Processor Service
+  transaction-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: transaction-processor-enterprise
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production,docker
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_NAME=transaction_processor
+      - DB_USERNAME=tx_processor
+      - DB_PASSWORD=secure_password_123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTICSEARCH_HOST=elasticsearch:9200
+      - ZIPKIN_URL=http://zipkin:9411
+      - ADMIN_EMAIL=admin@company.com
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+    networks:
+      - transaction-network
+    depends_on:
+      - postgresql
+      - redis
+      - elasticsearch
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+          cpus: '8.0'
+        reservations:
+          memory: 8G
+          cpus: '4.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/transaction-processor/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL Database
+  postgresql:
+    image: postgres:15-alpine
+    container_name: transaction-db
+    environment:
+      - POSTGRES_DB=transaction_processor
+      - POSTGRES_USER=tx_processor
+      - POSTGRES_PASSWORD=secure_password_123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    command: |
+      postgres 
+      -c max_connections=1000
+      -c shared_buffers=1GB
+      -c effective_cache_size=3GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=512MB
+      -c random_page_cost=1.1
+      -c temp_file_limit=2GB
+      -c log_min_duration_statement=1000
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=32MB
+      -c default_statistics_target=100
+
+  # Redis for Caching and Session Management
+  redis:
+    image: redis:7-alpine
+    container_name: transaction-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    command: |
+      redis-server 
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec
+
+  # Elasticsearch for Metrics and Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: transaction-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=false
+      - xpack.monitoring.collection.enabled=true
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: transaction-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+
+  # Grafana for Monitoring Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: transaction-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Zipkin for Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: transaction-zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=elasticsearch:9200
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+
+  # Nginx Load Balancer (for multiple app instances)
+  nginx:
+    image: nginx:alpine
+    container_name: transaction-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - transaction-network
+    restart: unless-stopped
+    depends_on:
+      - transaction-processor
+
+networks:
+  transaction-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgresql_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:

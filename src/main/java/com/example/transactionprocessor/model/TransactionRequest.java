@@ -33,6 +33,23 @@ public class TransactionRequest {
     @JsonProperty("referenceNumber")
     private String referenceNumber;
     
+    // Refund-specific fields
+    @JsonProperty("originalTransactionId")
+    private String originalTransactionId;
+    
+    @JsonProperty("refundReason")
+    private String refundReason;
+    
+    // Chargeback-specific fields
+    @JsonProperty("chargebackReason")
+    private String chargebackReason;
+    
+    @JsonProperty("chargebackCode")
+    private String chargebackCode;
+    
+    @JsonProperty("liabilityShift")
+    private Boolean liabilityShift;
+    
     public TransactionRequest() {}
     
     public TransactionRequest(String transactionType, BigDecimal amount, String currency, 
@@ -120,6 +137,48 @@ public class TransactionRequest {
     
     public void setReferenceNumber(String referenceNumber) {
         this.referenceNumber = referenceNumber;
+    }
+    
+    // Refund-specific getters and setters
+    public String getOriginalTransactionId() {
+        return originalTransactionId;
+    }
+    
+    public void setOriginalTransactionId(String originalTransactionId) {
+        this.originalTransactionId = originalTransactionId;
+    }
+    
+    public String getRefundReason() {
+        return refundReason;
+    }
+    
+    public void setRefundReason(String refundReason) {
+        this.refundReason = refundReason;
+    }
+    
+    // Chargeback-specific getters and setters
+    public String getChargebackReason() {
+        return chargebackReason;
+    }
+    
+    public void setChargebackReason(String chargebackReason) {
+        this.chargebackReason = chargebackReason;
+    }
+    
+    public String getChargebackCode() {
+        return chargebackCode;
+    }
+    
+    public void setChargebackCode(String chargebackCode) {
+        this.chargebackCode = chargebackCode;
+    }
+    
+    public Boolean getLiabilityShift() {
+        return liabilityShift;
+    }
+    
+    public void setLiabilityShift(Boolean liabilityShift) {
+        this.liabilityShift = liabilityShift;
     }
     
     @Override
